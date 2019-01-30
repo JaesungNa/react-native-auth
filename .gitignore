@@ -56,4 +56,4 @@ buck-out/
 *.jsbundle
 
 # Firebase
-./src/FirebaseKey.js
+src/FirebaseKey.js
