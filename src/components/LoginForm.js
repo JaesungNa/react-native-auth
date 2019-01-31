@@ -2,24 +2,55 @@
 import React, { Component } from 'react';
 import { Text } from 'react-native';
 import firebase from 'firebase';
-import { Button, Card, CardSection, Input } from './common/Index';
+import { Button, Card, CardSection, Input, Spinner } from './common/Index';
 
 class LoginForm extends Component {
     state = {
         email: '',
         password: '',
-        error: ''
+        error: '',
+        loading: false
     };
     onButtonPress() {
         const { email, password } = this.state;
+        this.setState({
+            error: '',
+            loading: true
+        });
 
-        firebase.auth().signInAndRetrieveDataWithEmailAndPassword(email, password)
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .then(this.onLoginSuccess.bind(this))
             .catch(() => {
-                firebase.auth().createUserAndRetrieveDataWithEmailAndPassword(email, password)
-                    .catch(() => {
-                        this.setState({ error: 'Authentication Failed' });
-                    });
+                firebase.auth().createUserWithEmailAndPassword(email, password)
+                    .then(this.onLoginSuccess.bind(this))
+                    .catch(this.onLoginFail.bind(this));
             });
+    }
+    onLoginSuccess() {
+        this.setState({
+            email: '',
+            password: '',
+            error: '',
+            loading: false
+        });
+    }
+    onLoginFail() {
+        this.setState({
+            error: 'Authentication Failed',
+            loading: false
+        });
+    }
+    renderButton() {
+        if (this.state.loading) {
+            return <Spinner size="small" />;
+        }
+        return (
+            <Button
+                onPress={this.onButtonPress.bind(this)}
+            >
+                Log in
+            </Button>
+        );
     }
     render() {
         return (
@@ -46,11 +77,7 @@ class LoginForm extends Component {
                     {this.state.error}
                 </Text>
                 <CardSection>
-                    <Button
-                        onPress={this.onButtonPress.bind(this)}
-                    >
-                        Log in
-                    </Button>
+                    {this.renderButton()}
                 </CardSection>
             </Card>
         );
@@ -62,5 +89,5 @@ const styles = {
         color: 'red',
         alignSelf: 'center'
     }
-}
+};
 export default LoginForm;
